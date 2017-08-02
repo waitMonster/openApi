@@ -15,7 +15,6 @@ import java.util.HashMap;
 public class RequestVo {
     private String requestUrl="";
     private HashMap<String ,Object> requestParams=new HashMap<>();
-  // private JSON requestParams=new JSONObject();
     private HashMap<String ,Object> requestHeads=new HashMap<>();
 
 }

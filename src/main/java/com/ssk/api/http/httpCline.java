@@ -5,32 +5,74 @@ package com.ssk.api.http; /**
 
 import com.ssk.api.vo.RequestVo;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import com.ssk.api.common.urlChange;
+import com.ssk.api.vo.ResponseVo;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSON;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import java.util.ArrayList;
+
+import java.util.List;
+
 public class httpCline {
     String url="";
     urlChange uc=new urlChange();
+    ResponseVo responseVo;
+    private JSONObject json = null;
+    private String responseStr = "";
+    private int httpCode = 0;
+
+    private List<Cookie> cookies;
+    private Integer fileSize = 0;
+    private org.apache.http.Header[] headers;
+
     public void httpGet(RequestVo requestVo) {
         HttpClient client = new DefaultHttpClient();
         url = requestVo.getRequestUrl()+"?";
         url =uc.mapToStr(requestVo.getRequestParams(),url);
         System.out.println(url);
+        CookieStore cookieStore = new BasicCookieStore();
+        HttpContext localContext = new BasicHttpContext();
+        localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
         HttpGet get=new HttpGet(url);
-        //HttpResponse
+        responseVo=new ResponseVo();
         try {
-            HttpResponse Response =client.execute(get);
+            //添加文件头部
+            if (!requestVo.getRequestHeads().isEmpty()) {
+                for (String key : requestVo.getRequestHeads().keySet()) {
+                    get.addHeader(key,requestVo.getRequestHeads().get(key).toString());
+                }
+            }
+            //执行get语句
+            HttpResponse Response =client.execute(get,localContext);
             //打印返回值
-            System.out.println(Response.getStatusLine().getStatusCode());
+            httpCode=Response.getStatusLine().getStatusCode();
+            System.out.println(httpCode);
+            responseVo.setHttpCode(httpCode);
             //打印返回值
             //EntityUtils
-            System.out.println(EntityUtils.toString(Response.getEntity()));
+            json=JSONObject.parseObject(EntityUtils.toString(Response.getEntity()));
+            System.out.println(json);
+            responseVo.setJson(json);
             //打印head
-            System.out.println(Response.getFirstHeader("Content-Type"));
+            responseVo.setCookies(cookieStore.getCookies());
+            System.out.println(cookieStore.getCookies());
+           // System.out.println(Response.getFirstHeader("Content-Type"));
       //      ResponseVo responseVo =new ResponseVo();
+
 
         }catch (Exception E){
 
@@ -38,20 +80,53 @@ public class httpCline {
 
 
     }
-    public void httpPost() throws Exception {
+    public void httpPost(RequestVo requestVo)  {
         HttpClient client = new DefaultHttpClient();
-        HttpPost post=new HttpPost("http://www.baidu.com");
-        //HttpResponse
-        HttpResponse Response =client.execute(post);
-        //打印返回值
-        System.out.println(Response.getStatusLine().getStatusCode());
-        //打印返回值
-        //EntityUtils
+        url = requestVo.getRequestUrl();
+        System.out.println(url);
+        HttpPost post=new HttpPost(url);
 
-        System.out.println(EntityUtils.toString(Response.getEntity()));
-        //打印head
-        System.out.println(Response.getAllHeaders());
-        System.out.println(Response.getFirstHeader("Content-Type"));
+        CookieStore cookieStore = new BasicCookieStore();
+        HttpContext localContext = new BasicHttpContext();
+        localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+
+        responseVo=new ResponseVo();
+        try{
+            if (!requestVo.getRequestHeads().isEmpty()) {
+                for (String key : requestVo.getRequestHeads().keySet()) {
+                    post.addHeader(key,requestVo.getRequestHeads().get(key).toString());
+                }
+            }
+            // 创建参数队列
+            List<NameValuePair> formparams = new ArrayList<NameValuePair>();
+            for (String key : requestVo.getRequestParams().keySet()) {
+                formparams.add(new BasicNameValuePair(key, requestVo.getRequestParams().get(key).toString()));
+
+            }
+            System.out.println(formparams);
+            UrlEncodedFormEntity uefEntity;
+            UrlEncodedFormEntity formEntiry = new UrlEncodedFormEntity(formparams, "UTF-8");
+            post.setEntity(formEntiry);
+            //HttpResponse
+            HttpResponse Response =client.execute(post,localContext);
+             httpCode=Response.getStatusLine().getStatusCode();
+            System.out.println(httpCode);
+            responseVo.setHttpCode(httpCode);
+            //打印返回值
+            //EntityUtils
+            json=JSONObject.parseObject(EntityUtils.toString(Response.getEntity()));
+            System.out.println(json);
+            responseVo.setJson(json);
+            //打印head
+            responseVo.setCookies(cookieStore.getCookies());
+            System.out.println(cookieStore.getCookies());
+            // System.out.println(Response.getFirstHeader("Content-Type"));
+            //      ResponseVo responseVo =new ResponseVo();
+
+        }catch(Exception e){
+
+        }
+
     }
 
 

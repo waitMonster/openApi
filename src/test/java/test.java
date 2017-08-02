@@ -9,7 +9,7 @@ import com.ssk.api.http.httpCline;
 public class test {
     httpCline hc=new httpCline();
     @Test
-    public void getTest() throws Exception{
+    public void getTest() {
         String requestUrl="http://www.kuaidi100.com/query";
         HashMap<String ,Object> requestParams=new HashMap<>();
         requestParams.put("type","ems");
@@ -17,7 +17,7 @@ public class test {
         HashMap<String ,Object> requestHeads=new HashMap<>();
         RequestVo requestVo =new RequestVo(requestUrl,requestParams,requestHeads);
         System.err.println(requestParams.toString().split(","));
-        hc.httpGet(requestVo);
+        hc.httpPost(requestVo);
     }
 
 
